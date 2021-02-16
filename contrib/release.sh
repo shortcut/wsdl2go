@@ -1,10 +1,12 @@
 #!/bin/bash
 
+set -euo pipefail
+
 VERSION=${VERSION:-`git describe --tags`}
 
 for OS in linux freebsd windows darwin
 do
-	GOOS=$OS GOARCH=amd64 go build -ldflags "-w -X main.version=${VERSION}"
+	CGO_ENABLED="0" GOOS=$OS GOARCH=amd64 go build -ldflags "-w -X main.version=${VERSION}"
 	TARBALL=wsdl2go-$VERSION-$OS-amd64.tar.gz
 	if [ "$OS" = "windows" ]; then
 		tar czf $TARBALL wsdl2go.exe

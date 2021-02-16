@@ -1,2 +1,5 @@
 # IDE
 .idea
+
+# Release files:
+wsdl2go*.tar.gz

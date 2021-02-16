@@ -14,4 +14,7 @@ docs:
 version:
 	@echo $(version)
 
+release:
+	@./contrib/release.sh
+
 .PHONY: vet docs version
