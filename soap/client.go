@@ -243,7 +243,7 @@ func (e *HTTPError) Error() string {
 type Envelope struct {
 	XMLName      xml.Name `xml:"SOAP-ENV:Envelope"`
 	EnvelopeAttr string   `xml:"xmlns:SOAP-ENV,attr"`
-	NSAttr       string   `xml:"xmlns:ns,attr"`
+	NSAttr       string   `xml:"xmlns,attr"`
 	TNSAttr      string   `xml:"xmlns:tns,attr,omitempty"`
 	URNAttr      string   `xml:"xmlns:urn,attr,omitempty"`
 	XSIAttr      string   `xml:"xmlns:xsi,attr,omitempty"`
