@@ -1,16 +1,20 @@
 # wsdl2go
 
-[![Build Status](https://travis-ci.org/fiorix/wsdl2go.svg)](https://travis-ci.org/fiorix/wsdl2go)
-[![Go Report Card](https://goreportcard.com/badge/github.com/fiorix/wsdl2go)](https://goreportcard.com/report/github.com/fiorix/wsdl2go)
-[![GoDoc](https://godoc.org/github.com/fiorix/wsdl2go?status.svg)](https://godoc.org/github.com/fiorix/wsdl2go)
+
+
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/shortcut/wsdl2go)](https://pkg.go.dev/github.com/shortcut/wsdl2go)
+[![GitHubActions](https://github.com/shortcut/wsdl2go/workflows/Test/badge.svg)](https://github.com/shortcut/wsdl2go/actions?query=workflow%3ATest)
 
 wsdl2go is a command line tool to generate [Go](https://golang.org) code
 from [WSDL](https://en.wikipedia.org/wiki/Web_Services_Description_Language).
 
+This is a fork of https://github.com/fiorix/wsdl2go
+
+
 Download:
 
 ```
-go get github.com/fiorix/wsdl2go
+go get github.com/shortcut/wsdl2go
 ```
 
 ### Usage
@@ -44,7 +48,7 @@ Example:
 import (
 	"/path/to/generated/example"
 
-	"github.com/fiorix/wsdl2go/soap"
+	"github.com/shortcut/wsdl2go/soap"
 )
 
 func main() {
