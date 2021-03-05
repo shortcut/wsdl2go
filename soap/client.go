@@ -54,10 +54,16 @@ type Client struct {
 	Envelope               string               // Optional SOAP Envelope
 	Header                 Header               // Optional SOAP Header
 	ContentType            string               // Optional Content-Type (default text/xml)
-	Config                 *http.Client         // Optional HTTP client
+	Config                 Doer                 // Optional HTTP client, or similar
 	Pre                    func(*http.Request)  // Optional hook to modify outbound requests
 	Post                   func(*http.Response) // Optional hook to snoop inbound responses
 	Ctx                    context.Context      // Optional variable to allow Context Tracking.
+}
+
+// Doer is an interface that is implemented by http.Client, but allows for callers to have other implementations, and it allows for mocking/faking in unit-tests.
+type Doer interface {
+	// Do sends an HTTP request and returns an HTTP response.
+	Do(*http.Request) (*http.Response, error)
 }
 
 // XMLTyper is an abstract interface for types that can set an XML type.
