@@ -3,3 +3,6 @@
 
 # Release files:
 wsdl2go*.tar.gz
+
+# Mac-files
+.DS_Store
