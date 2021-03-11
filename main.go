@@ -52,7 +52,12 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		defer f.Close()
+		defer func() {
+			err := f.Close()
+			if err != nil {
+				log.Printf("wsdl2go error when closing destination-file: %v", err)
+			}
+		}()
 		w = f
 	}
 
@@ -76,7 +81,10 @@ func codegen(w io.Writer, opts options, cli *http.Client) error {
 	if err != nil {
 		return err
 	}
-	f.Close()
+	err = f.Close()
+	if err != nil {
+		return err
+	}
 
 	enc := wsdlgo.NewEncoder(w)
 	enc.SetClient(cli)

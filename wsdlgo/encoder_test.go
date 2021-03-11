@@ -50,8 +50,8 @@ var EncoderCases = []struct {
 	{F: "soap12wcf.wsdl", G: "soap12wcf.golden", E: nil},
 	{F: "memcache.wsdl", G: "memcache.golden", E: nil},
 	{F: "importer.wsdl", G: "memcache.golden", E: nil},
-	//{F: "data.wsdl", G: "data.golden", E: nil}, // TODO: This test-case panics.
-	//{F: "data_withkeyword.wsdl", G: "data_withkeyword.golden", E: nil}, // TODO: This test-case panics.
+	{F: "data.wsdl", G: "data.golden", E: nil},
+	{F: "data_withkeyword.wsdl", G: "data_withkeyword.golden", E: nil},
 	{F: "localimport.wsdl", G: "localimport.golden", E: nil},
 	{F: "localimport-url.wsdl", G: "localimport.golden", E: nil},
 	{F: "localimport_choice.wsdl", G: "localimport_choice.golden", E: nil},
