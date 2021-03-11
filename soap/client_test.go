@@ -7,6 +7,8 @@ import (
 	"net/http/httptest"
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 type StructFieldSetXMLData struct {
@@ -78,7 +80,8 @@ func TestRoundTrip(t *testing.T) {
 			http.NotFound(w, r)
 			return
 		}
-		io.Copy(w, r.Body)
+		_, err := io.Copy(w, r.Body)
+		require.NoError(t, err)
 	})
 	s := httptest.NewServer(echo)
 	defer s.Close()
@@ -142,7 +145,8 @@ func TestRoundTripWithAction(t *testing.T) {
 			http.NotFound(w, r)
 			return
 		}
-		io.Copy(w, r.Body)
+		_, err := io.Copy(w, r.Body)
+		require.NoError(t, err)
 	})
 	s := httptest.NewServer(echo)
 	defer s.Close()
@@ -213,7 +217,8 @@ func TestRoundTripSoap12(t *testing.T) {
 			http.NotFound(w, r)
 			return
 		}
-		io.Copy(w, r.Body)
+		_, err := io.Copy(w, r.Body)
+		require.NoError(t, err)
 	})
 	s := httptest.NewServer(echo)
 	defer s.Close()

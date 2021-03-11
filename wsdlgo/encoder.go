@@ -126,15 +126,6 @@ func gofmtPath() (string, error) {
 
 }
 
-var numberSequence = regexp.MustCompile(`([a-zA-Z])(\d+)([a-zA-Z]?)`)
-var numberReplacement = []byte(`$1 $2 $3`)
-
-func addWordBoundariesToNumbers(s string) string {
-	b := []byte(s)
-	b = numberSequence.ReplaceAll(b, numberReplacement)
-	return string(b)
-}
-
 func (ge *goEncoder) Encode(d *wsdl.Definitions) error {
 	if d == nil {
 		return nil
@@ -756,7 +747,7 @@ func (ge *goEncoder) writeSOAPFunc(w io.Writer, d *wsdl.Definitions, op *wsdl.Op
 		}
 	}
 	if soapAction != "" {
-		soapActionFuncT.Execute(w, &struct {
+		err := soapActionFuncT.Execute(w, &struct {
 			RoundTripType      string
 			Action             string
 			PortType           string
@@ -789,9 +780,9 @@ func (ge *goEncoder) writeSOAPFunc(w io.Writer, d *wsdl.Definitions, op *wsdl.Op
 			strings.Join(retDefaults, ","),
 			rpcStyle,
 		})
-		return true
+		return err == nil
 	}
-	soapFuncT.Execute(w, &struct {
+	err := soapFuncT.Execute(w, &struct {
 		PortType           string
 		Name               string
 		OpName             string
@@ -820,15 +811,7 @@ func (ge *goEncoder) writeSOAPFunc(w io.Writer, d *wsdl.Definitions, op *wsdl.Op
 		strings.Join(retDefaults, ","),
 		rpcStyle,
 	})
-	return true
-}
-
-func renameParam(p, name string) string {
-	v := strings.SplitN(p, " ", 2)
-	if len(v) != 2 {
-		return p
-	}
-	return name + " " + v[1]
+	return err == nil
 }
 
 // returns list of function input parameters.
@@ -963,25 +946,6 @@ func (ge *goEncoder) fixFuncNameConflicts(name string) string {
 	return name
 }
 
-// Fixes request and response parameters with the same name, in place.
-// Each string in the slice consists of Go's "name Type", we only
-// compare names. In case of a conflict, we set the response one
-// in the form of respName.
-func (ge *goEncoder) fixParamConflicts(req, resp []string) {
-	for _, a := range req {
-		for j, b := range resp {
-			x := strings.SplitN(a, " ", 2)[0]
-			y := strings.SplitN(b, " ", 2)
-			if len(y) > 1 {
-				if x == y[0] {
-					n := goSymbol(y[0])
-					resp[j] = "resp" + n + " " + y[1]
-				}
-			}
-		}
-	}
-}
-
 // Helps to clean up operation names, so we can generate
 // nice datatype names which make golang happy.
 // E.g. - a soap operation gkstServer_getVersion is sanitized
@@ -1063,22 +1027,6 @@ func (ge *goEncoder) wsdl2goDefault(t string) string {
 	}
 }
 
-func (ge *goEncoder) renameType(old, name string) {
-	// TODO: rename Elements that point to this type also?
-	ct, exists := ge.ctypes[old]
-	if !exists {
-		old = trimns(old)
-		ct, exists = ge.ctypes[old]
-		if !exists {
-			return
-		}
-		name = trimns(name)
-	}
-	ct.Name = name
-	delete(ge.ctypes, old)
-	ge.ctypes[name] = ct
-}
-
 // writeGoTypes writes Go types from WSDL types to w.
 //
 // Types are written in this order, alphabetically: date types that we
@@ -1091,7 +1039,10 @@ func (ge *goEncoder) writeGoTypes(w io.Writer, d *wsdl.Definitions) error {
 		if st.Restriction != nil {
 			ge.writeComments(&b, stname, "")
 			fmt.Fprintf(&b, "type %s %s\n\n", stname, ge.wsdl2goType(st.Restriction.Base))
-			ge.genValidator(&b, stname, st.Restriction)
+			err := ge.genValidator(&b, stname, st.Restriction)
+			if err != nil {
+				return err
+			}
 		} else if st.Union != nil {
 			types := strings.Split(st.Union.MemberTypes, " ")
 			ntypes := make([]string, len(types))
@@ -1127,7 +1078,10 @@ func (ge *goEncoder) writeGoTypes(w io.Writer, d *wsdl.Definitions) error {
 		}
 	}
 
-	ge.genDateTypes(w) // must be called last
+	err = ge.genDateTypes(w) // must be called last
+	if err != nil {
+		return err
+	}
 	_, err = io.Copy(w, &b)
 	return err
 }
@@ -1165,7 +1119,7 @@ func (ge *goEncoder) sortedOperations() []string {
 	return keys
 }
 
-func (ge *goEncoder) genDateTypes(w io.Writer) {
+func (ge *goEncoder) genDateTypes(w io.Writer) error {
 	cases := []struct {
 		needs bool
 		name  string
@@ -1197,8 +1151,12 @@ func (ge *goEncoder) genDateTypes(w io.Writer) {
 			continue
 		}
 		ge.writeComments(w, c.name, c.name+" in WSDL format.")
-		io.WriteString(w, c.code)
+		_, err := io.WriteString(w, c.code)
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 var validatorT = template.Must(template.New("validator").Parse(`
@@ -1215,9 +1173,9 @@ func (v {{.TypeName}}) Validate() bool {
 }
 `))
 
-func (ge *goEncoder) genValidator(w io.Writer, typeName string, r *wsdl.Restriction) {
+func (ge *goEncoder) genValidator(w io.Writer, typeName string, r *wsdl.Restriction) error {
 	if len(r.Enum) == 0 {
-		return
+		return nil
 	}
 	args := make([]string, len(r.Enum))
 	t := ge.wsdl2goType(r.Base)
@@ -1229,7 +1187,7 @@ func (ge *goEncoder) genValidator(w io.Writer, typeName string, r *wsdl.Restrict
 		}
 	}
 	ge.needsStdPkg["reflect"] = true
-	validatorT.Execute(w, &struct {
+	return validatorT.Execute(w, &struct {
 		TypeName string
 		Type     string
 		Args     []string
@@ -1667,7 +1625,6 @@ func (ge *goEncoder) writeComments(w io.Writer, typeName, comment string) {
 	if line != "" {
 		fmt.Fprintf(w, "%s\n", line)
 	}
-	return
 }
 
 // SetLocalNamespace allows overridding of namespace in XMLName
